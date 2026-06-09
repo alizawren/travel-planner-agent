@@ -1,0 +1,9 @@
+# LangGraph agent
+langgraph>=0.4.0
+langchain-mcp-adapters>=0.1.0
+langchain-google-genai>=4.0.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# MCP server
+fastmcp>=3.4.0

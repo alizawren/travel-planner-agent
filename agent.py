@@ -1,14 +1,21 @@
+import asyncio
+from pathlib import Path
+
+from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
-from langgraph.checkpoint.memory import MemorySaver
-from langchain_core.tools import tool
+# from langgraph.checkpoint.memory import MemorySaver
+from langchain_core.tools import tool # todo: remove
 from langchain_google_genai import ChatGoogleGenerativeAI
-from dotenv import load_dotenv
+from dotenv import load_dotenv # todo: remove
 
+import sys
 import os
 import requests
 
 load_dotenv()
+
+MCP_SERVER = Path(__file__).resolve().parent / "mcp-server.py"
 
 @tool
 def calculate_sum(a: int, b: int) -> int:
@@ -54,33 +61,71 @@ def look_up_flights(
         params=params
     ).json()
 
-tools = [calculate_sum, look_up_flights]
+# tools = [calculate_sum, look_up_flights]
 
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",  # or gemini-2.0-flash, etc.
-    temperature=0,
-)
-llm = llm.bind_tools(tools) # now the model can call it
+async def build_graph():
+    client = MultiServerMCPClient(
+        {
+            "demo": {
+                "command": sys.executable,
+                "args": [str(MCP_SERVER)],
+                "transport": "stdio",
+                # stdio servers don't inherit your shell env:
+                # "env": {"SERPAPI_API_KEY": os.environ["SERPAPI_API_KEY"]},
+            }
+        }
+    )
+    if os.environ.get("MCP_TRANSPORT") == "http":
+        client = MultiServerMCPClient(
+            {
+                "demo": {
+                    "url": "http://127.0.0.1:8000/mcp",
+                    "transport": "http",
+                }
+            }
+        )
 
-def agent(state: MessagesState):
-    response = llm.invoke(state["messages"])
-    # print("Model response:", response)
-    return {"messages": [response]}
-    # return {"messages": [llm.invoke(state["messages"])]}
+    mcp_tools = await client.get_tools()
+    tools = mcp_tools + [calculate_sum, look_up_flights]
 
-g = StateGraph(MessagesState)
-g.add_node("agent", agent)
-g.add_node("tools", ToolNode(tools))
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash", 
+        temperature=0
+    ).bind_tools(tools)
+    
 
-g.add_edge(START, "agent")
-g.add_conditional_edges("agent", tools_condition)
-g.add_edge("tools", "agent") # loop back
+    def agent(state: MessagesState):
+        return {"messages": [llm.invoke(state["messages"])]}
 
-g = g.compile(
-    # checkpointer=MemorySaver(), # short-term
-)
+    g = StateGraph(MessagesState)
+    g.add_node("agent", agent)
+    g.add_node("tools", ToolNode(tools))
 
-result = g.invoke({"messages": [{"role": "user", "content": "Hi! Can you look for flights from CDG to AUS on 2026-06-01."}]})
+    g.add_edge(START, "agent")
+    g.add_conditional_edges("agent", tools_condition)
+    g.add_edge("tools", "agent") # loop back
 
-for msg in result["messages"]:
-    print(f"{msg.type}: {msg.content}")
+    return g.compile(
+        # checkpointer=MemorySaver(), # short-term
+    )
+
+async def main():
+    g = await build_graph()
+    result = await g.ainvoke(
+        {"messages": [
+            {"role": "user", "content": "Hi! Can you look for flights from CDG to AUS on 2026-07-01."},
+        ]}
+    )
+    result2 = await g.ainvoke(
+        {"messages": [
+            {"role": "user", "content": "Can you print the secret message?"}
+        ]}
+    )
+    
+    for msg in result["messages"]:
+        print(f"{msg.type}: {msg.content}")
+    for msg in result2["messages"]:
+        print(f"{msg.type}: {msg.content}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
