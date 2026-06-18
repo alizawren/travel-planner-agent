@@ -3,7 +3,6 @@ import os
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_anthropic import ChatAnthropic
 
-
 def get_llm(tools):
     provider = os.getenv("LLM_PROVIDER", "gemini").lower().strip()
     temperature = float(os.getenv("LLM_TEMPERATURE", "0"))
@@ -15,7 +14,7 @@ def get_llm(tools):
         )
     elif provider in {"claude", "anthropic"}:
         llm = ChatAnthropic(
-            model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
+            model=os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001"),
             temperature=temperature,
         )
     else:
