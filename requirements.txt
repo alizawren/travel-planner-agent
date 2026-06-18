@@ -8,3 +8,5 @@ requests>=2.31.0
 
 # MCP server
 fastmcp>=3.4.0
+icalendar>=6.0.0
+recurring-ical-events>=3.0.0

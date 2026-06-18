@@ -4,8 +4,10 @@ from pathlib import Path
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
+from langchain_core.messages import SystemMessage
 # from langgraph.checkpoint.memory import MemorySaver
 from util import format_message, get_llm
+from prompts import build_system_prompt
 from dotenv import load_dotenv
 
 import sys
@@ -13,7 +15,7 @@ import os
 
 load_dotenv()
 
-MCP_SERVER = Path(__file__).resolve().parent / "mcp-server.py"
+MCP_SERVER = Path(__file__).resolve().parent / "mcp_server.py"
 
 async def build_graph():
     client = MultiServerMCPClient(
@@ -38,9 +40,11 @@ async def build_graph():
     tools = await client.get_tools()
 
     llm = get_llm(tools)
+    system_prompt = build_system_prompt()
 
     def agent(state: MessagesState):
-        return {"messages": [llm.invoke(state["messages"])]}
+        messages = [SystemMessage(content=system_prompt), *state["messages"]]
+        return {"messages": [llm.invoke(messages)]}
 
     g = StateGraph(MessagesState)
     g.add_node("agent", agent)
@@ -51,7 +55,7 @@ async def build_graph():
     g.add_edge("tools", "agent") # loop back
 
     return g.compile(
-        # checkpointer=MemorySaver(), # short-term
+        checkpointer=MemorySaver(), # short-term
     )
 
 async def main():
@@ -70,7 +74,7 @@ async def main():
     print("Calling model again...", flush=True)
     result2 = await g.ainvoke(
         {"messages": [
-            {"role": "user", "content": "Can you print the secret message?"}
+            {"role": "user", "content": "Can you find the soonest free dates for a trip to Paris? Use the calendar file located at user_info/alissaren98@gmail.com.ics. Look for a trip that is 3 days long."}
         ]}
     )
     
