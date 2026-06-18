@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
 from pathlib import Path
 from dotenv import load_dotenv
-from calendar_util import find_soonest_free_trip
+from calendar_util import find_soonest_free_dates
 
 import os
 import requests
@@ -48,18 +48,22 @@ def get_free_calendar_dates(
     calendar_file: str,
     max_trip_days: int = 15,
     min_trip_days: int = 2,
+    num_date_ranges: int = 5,
 ) -> str:
     """Parses a calendar file and finds the soonest dates for a trip.
     Args: 
         calendar_file: The filename for a calendar file to parse.
         max_trip_days: The maximum length of a trip, in days.
         min_trip_days: The minimum length of a trip, in days.
+        num_date_ranges: The number of date ranges to return.
     Returns: 
-        A start date and end date for a trip.
+        A list of free date ranges for the trip. Date ranges are formatted as {"start_date": "2026-07-01", "end_date": "2026-07-03"}
     """
     calendar_path = _resolve(WORKSPACE, calendar_file)
     return json.dumps(
-        find_soonest_free_trip(calendar_path, min_trip_days, max_trip_days)
+        find_soonest_free_dates(
+            calendar_path, min_trip_days, max_trip_days, num_date_ranges
+        )
     )
 
 @mcp.tool

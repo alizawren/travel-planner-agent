@@ -5,19 +5,22 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from langchain_core.messages import SystemMessage
-# from langgraph.checkpoint.memory import MemorySaver
-from util import format_message, get_llm
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.store.memory import InMemoryStore
+from util import format_messages, get_llm
 from prompts import build_system_prompt
 from dotenv import load_dotenv
 
+import json
 import sys
 import os
 
 load_dotenv()
 
 MCP_SERVER = Path(__file__).resolve().parent / "mcp_server.py"
+USER_PREFS_PATH = Path(__file__).resolve().parent / "user_info" / "user_prefs.json"
 
-async def build_graph():
+async def build_graph(store: InMemoryStore):
     client = MultiServerMCPClient(
         {
             "demo": {
@@ -55,31 +58,32 @@ async def build_graph():
     g.add_edge("tools", "agent") # loop back
 
     return g.compile(
-        checkpointer=MemorySaver(), # short-term
+        checkpointer=MemorySaver(),
+        store=store,
     )
 
 async def main():
+    config = {"configurable": {"thread_id": "u-42"}}
+    user_id = config["configurable"]["thread_id"]
+
+    store = InMemoryStore()
+    prefs = json.loads(USER_PREFS_PATH.read_text(encoding="utf-8"))
+    namespace = (user_id, "prefs")
+    for key, value in prefs.items():
+        store.put(namespace, key, {"v": value})
+
     print("Building graph...", flush=True)
-    g = await build_graph()
+    g = await build_graph(store)
 
     print("Calling model...", flush=True)
     result = await g.ainvoke(
         {"messages": [
-            {"role": "user", "content": "Hi! Can you look for flights from CDG to AUS on 2026-07-01."},
-        ]}
+            {"role": "user", "content": "Hi! Can you plan a trip to Paris?"},
+        ]},
+        config,
     )
-    for msg in result["messages"]:
-        print(format_message(msg))
+    print(format_messages(result["messages"]))
 
-    print("Calling model again...", flush=True)
-    result2 = await g.ainvoke(
-        {"messages": [
-            {"role": "user", "content": "Can you find the soonest free dates for a trip to Paris? Use the calendar file located at user_info/alissaren98@gmail.com.ics. Look for a trip that is 3 days long."}
-        ]}
-    )
-    
-    for msg in result2["messages"]:
-        print(format_message(msg))
 
 if __name__ == "__main__":
     asyncio.run(main())

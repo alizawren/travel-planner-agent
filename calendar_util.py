@@ -56,7 +56,31 @@ def _collect_busy_dates(
     return {day for day in busy if horizon_start <= day <= horizon_end}
 
 
-def _find_soonest_trip(
+def _find_soonest_date_ranges(
+    busy: set[date],
+    min_trip_days: int,
+    max_trip_days: int,
+    start_from: date,
+    search_until: date,
+    num_date_ranges: int,
+) -> list[tuple[date, date]]:
+    trips: list[tuple[date, date]] = []
+    current = start_from
+
+    while current <= search_until and len(trips) < num_date_ranges:
+        trip = _find_next_date_range(
+            busy, min_trip_days, max_trip_days, current, search_until
+        )
+        if trip is None:
+            break
+
+        trips.append(trip)
+        current = trip[1] + timedelta(days=1)
+
+    return trips
+
+
+def _find_next_date_range(
     busy: set[date],
     min_trip_days: int,
     max_trip_days: int,
@@ -84,15 +108,18 @@ def _find_soonest_trip(
     return None
 
 
-def find_soonest_free_trip(
+def find_soonest_free_dates(
     calendar_path: Path,
     min_trip_days: int = 2,
     max_trip_days: int = 15,
-) -> dict:
+    num_date_ranges: int = 5,
+) -> list[dict]:
     if min_trip_days < 1:
         raise ValueError("min_trip_days must be at least 1")
     if max_trip_days < min_trip_days:
         raise ValueError("max_trip_days must be greater than or equal to min_trip_days")
+    if num_date_ranges < 1:
+        raise ValueError("num_date_ranges must be at least 1")
     if not calendar_path.is_file():
         raise ValueError(f"Not a file: {calendar_path}")
 
@@ -102,18 +129,21 @@ def find_soonest_free_trip(
     search_until = today + timedelta(days=365 * 2)
     busy = _collect_busy_dates(calendar, today, search_until)
 
-    trip = _find_soonest_trip(
-        busy, min_trip_days, max_trip_days, today, search_until
+    trips = _find_soonest_date_ranges(
+        busy, min_trip_days, max_trip_days, today, search_until, num_date_ranges
     )
-    if trip is None:
-        return {"error": "No free dates found within the search window"}
+    if not trips:
+        return {"error": "No free dates found within the search window", "date_ranges": []}
 
-    start_date, end_date = trip
-    trip_days = (end_date - start_date).days + 1
-    return {
-        "start_date": start_date.isoformat(),
-        "end_date": end_date.isoformat(),
-        "trip_days": trip_days,
-        "min_trip_days": min_trip_days,
-        "max_trip_days": max_trip_days,
-    }
+    date_ranges = []
+    for start_date, end_date in trips:
+        trip_days = (end_date - start_date).days + 1
+        date_ranges.append(
+            {
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "trip_days": trip_days,
+            }
+        )
+
+    return date_ranges

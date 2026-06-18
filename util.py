@@ -26,15 +26,40 @@ def get_llm(tools):
     return llm.bind_tools(tools)
 
 
-def format_message(msg) -> str:
+def _tool_call_args(tool_msg, messages: list | None) -> dict:
+    if not messages:
+        return {}
+
+    tool_call_id = tool_msg.tool_call_id
+    for prior in reversed(messages):
+        if prior is tool_msg or prior.type != "ai":
+            continue
+        for call in prior.tool_calls or []:
+            if isinstance(call, dict):
+                call_id = call.get("id")
+                if call_id == tool_call_id:
+                    return call.get("args", {})
+            else:
+                if getattr(call, "id", None) == tool_call_id:
+                    return getattr(call, "args", {})
+    return {}
+
+def _format_message(msg, messages: list) -> str:
     if msg.type == "ai":
         return f"ai: {get_text(msg)}"
     elif msg.type == "human":
         return f"human: {get_text(msg)}"
     elif msg.type == "tool":
-        return f"tool: {msg.name} called"
+        args = _tool_call_args(msg, messages)
+        name = msg.name or "unknown"
+        return f"""tool: {name} called with args: {args}
+        result: {get_text(msg)}"""
     else:
         return f"other msg type: {msg.type}"
+
+
+def format_messages(messages: list) -> str:
+    return "\n".join(_format_message(msg, messages) for msg in messages)
 
 def get_text(msg) -> str:
     # LangChain messages expose .text for string extraction

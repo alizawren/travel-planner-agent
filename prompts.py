@@ -22,6 +22,7 @@ User profile:
 - Home airport: {home_airport}
 - Home city: {home_city}
 - Timezone: {timezone}
+- Calendar: The calendar file will be an .ics file located in the ./user_info directory.
 
 Run the following tasks in order:
 - Find free dates using the calendar tool.
