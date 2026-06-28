@@ -34,9 +34,50 @@ Run the following tasks in order:
 Guidelines:
 - If the user does not specify a departure airport, use {home_airport}.
 - If the user does not specify the number of travelers, use 1 and assume the user is an adult.
-- If the user does not specify trip dates or a length for the trip, use the select trip dates tool to find the best dates for the trip, which takes a calendar file and looks for free windows. Select the length of the trip based on the distance between the home and the destination; if the distance is less than 1000 miles, the trip should be 2-5 days; if the distance is greater than 1000 miles, the trip should be 5-10 days.
-- Use the calendar tool to find free trip windows.
-- Use airport codes (e.g. SJC, CDG) when calling flight lookup tools.
-- Ask clarifying questions when destination, dates, or trip length are missing.
+- If the user does not specify trip dates or a length for the trip, use the calendar tool to find the best dates for the trip, which takes a calendar file, max_trip_days, and min_trip_days and looks for free windows. Select the length of the trip based on the distance between the home and the destination; if the distance is less than 1000 miles, the trip should be 2-5 days; if the distance is greater than 1000 miles, the trip should be 5-10 days.
 
+When all trip details are obtained, return a structured trip summary:
+
+```
+Your Trip Summary:
+
+Home Airport: <the home airport>
+Destination Airport: <the destination airport>
+
+Trip Dates: <departure date> - <return date>
+Total Trip Length: <trip length> days
+
+Flight Info:
+Flight Number: <flight number>
+Airline: <airline>
+Departure: <departure airport> at <departure time>, <departure date>
+Return: <return airport> at <return time>, <return date>
+
+Hotel Info:
+Hotel Name: <hotel name>
+Hotel Address: <hotel address>
+Hotel Phone: <hotel phone>
+Hotel Website: <hotel website>
+Room Description: <brief description of the room>
+
+Itinerary:
+Day 1:
+- <activity 1>
+- <activity 2>
+...
+
+Day 2:
+...
+
+<continue until you have listed itinerary for the total trip length>
+
+Trip Cost Breakdown:
+--------------------------------
+Flight Cost: <flight cost>
+Hotel Cost: <hotel cost>
+Attraction Costs: <attraction costs>
+--------------------------------
+Total Trip Cost: <total trip cost>
+
+```
 """

@@ -43,21 +43,21 @@ def list_files(workspace: Path, path: str = ".") -> str:
     ]
     return "\n".join(lines) if lines else "(empty directory)"
 
-@mcp.tool
-def select_trip_dates(
-    calendar_file: str,
-    trip_length: int | None = None,
-) -> str:
-    """Selects the best dates for a trip.
-    Args:
-        calendar_file: The filename for a calendar file to parse.
-        trip_length: The length of the trip, in days. If not provided, the default is 7 days.
-    Returns:
-        The start and end date of the trip, formatted as {"start_date": "2026-07-01", "end_date": "2026-07-03"}
-    """
-    if trip_length is None or trip_length < 1:
-        trip_length = 7
-    return get_free_calendar_dates(calendar_file, trip_length, trip_length, 1)[0]
+# @mcp.tool
+# def select_trip_dates(
+#     calendar_file: str,
+#     trip_length: int | None = None,
+# ) -> str:
+#     """Selects the best dates for a trip.
+#     Args:
+#         calendar_file: The filename for a calendar file to parse.
+#         trip_length: The length of the trip, in days. If not provided, the default is 7 days.
+#     Returns:
+#         The start and end date of the trip, formatted as {"start_date": "2026-07-01", "end_date": "2026-07-03"}
+#     """
+#     if trip_length is None or trip_length < 1:
+#         trip_length = 7
+#     return get_free_calendar_dates(calendar_file, trip_length, trip_length, 1)[0]
 
 @mcp.tool
 def get_free_calendar_dates(
@@ -84,8 +84,8 @@ def get_free_calendar_dates(
 
 @mcp.tool
 def look_up_flights(
-    departure_id: str,
-    arrival_id: str,
+    departure_airport: str,
+    arrival_airport: str,
     outbound_date: str,
     return_date: str | None = None,
     type: int = 2,
@@ -94,8 +94,8 @@ def look_up_flights(
 ) -> str:
     """ Look for flights from one airport to another on a given date.
     Args:
-        departure_id: The ID of the departure airport.
-        arrival_id: The ID of the arrival airport.
+        departure_airport: The airport code (e.g. SJC, CDG) of the departure airport.
+        arrival_airport: The airport code (e.g. SJC, CDG) of the arrival airport.
         outbound_date: The date of the outbound flight.
         return_date: The date of the return flight.
         type: The type of flight: 1 for round-trip, 2 for one-way, 3 for multi-city.
@@ -106,8 +106,8 @@ def look_up_flights(
     """
     params = {
         "engine": "google_flights",
-        "departure_id": departure_id,
-        "arrival_id": arrival_id,
+        "departure_id": departure_airport,
+        "arrival_id": arrival_airport,
         "outbound_date": outbound_date,
         "type": type,
         "adults": adults,
