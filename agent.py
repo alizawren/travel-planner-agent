@@ -1,5 +1,22 @@
 import asyncio
+import json
+import os
+import sys
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from traceloop.sdk import Traceloop
+from traceloop.sdk.decorators import workflow
+
+if os.getenv("TRACELOOP_API_KEY"):
+    Traceloop.init(
+        app_name="travel-planner-agent",
+        api_key=os.getenv("TRACELOOP_API_KEY"),
+        disable_batch=True,
+    )
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.graph import StateGraph, MessagesState, START, END
@@ -9,16 +26,10 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.store.memory import InMemoryStore
 from util import format_messages, get_llm
 from prompts import build_system_prompt
-from dotenv import load_dotenv
-
-import json
-import sys
-import os
-
-load_dotenv()
 
 MCP_SERVER = Path(__file__).resolve().parent / "mcp_server.py"
 USER_PREFS_PATH = Path(__file__).resolve().parent / "user_info" / "user_prefs.json"
+
 
 async def build_graph(store: InMemoryStore):
     client = MultiServerMCPClient(
@@ -45,23 +56,25 @@ async def build_graph(store: InMemoryStore):
     llm = get_llm(tools)
     system_prompt = build_system_prompt()
 
-    def agent(state: MessagesState):
+    def agent_node(state: MessagesState):
         messages = [SystemMessage(content=system_prompt), *state["messages"]]
         return {"messages": [llm.invoke(messages)]}
 
     g = StateGraph(MessagesState)
-    g.add_node("agent", agent)
+    g.add_node("agent", agent_node)
     g.add_node("tools", ToolNode(tools))
 
     g.add_edge(START, "agent")
     g.add_conditional_edges("agent", tools_condition)
-    g.add_edge("tools", "agent") # loop back
+    g.add_edge("tools", "agent")
 
     return g.compile(
         checkpointer=MemorySaver(),
         store=store,
     )
 
+
+@workflow(name="travel_planner_agent")
 async def main():
     config = {"configurable": {"thread_id": "u-42"}}
     user_id = config["configurable"]["thread_id"]

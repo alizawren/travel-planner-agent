@@ -57,7 +57,7 @@ def select_trip_dates(
     """
     if trip_length is None or trip_length < 1:
         trip_length = 7
-    return json.dumps(get_free_calendar_dates(calendar_file, trip_length, trip_length, 1)[0])
+    return get_free_calendar_dates(calendar_file, trip_length, trip_length, 1)[0]
 
 @mcp.tool
 def get_free_calendar_dates(
