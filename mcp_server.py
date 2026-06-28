@@ -6,7 +6,6 @@ from calendar_util import find_soonest_free_dates
 import os
 import requests
 import json
-import urllib.parse
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
@@ -44,26 +43,21 @@ def list_files(workspace: Path, path: str = ".") -> str:
     ]
     return "\n".join(lines) if lines else "(empty directory)"
 
-# @mcp.tool
-# def select_trip_dates(
-#     calendar_file: str,
-#     trip_length: int,
-# ) -> str:
-#     """Selects the best dates for a trip.
-#     Args:
-#         calendar_file: The filename for a calendar file to parse.
-#         trip_length: The length of the trip, in days. If not provided, the default is 7 days.
-#     Returns:
-#         The start and end date of the trip, formatted as {"start_date": "2026-07-01", "end_date": "2026-07-03"}
-#     """
-#     if !trip_length or trip_length < 1:
-#         trip_length = 7
-#     calendar_path = _resolve(WORKSPACE, calendar_file)
-#     return json.dumps(
-#         find_soonest_free_dates(
-#             calendar_path, trip_length, trip_length, 1
-#         )
-#     )
+@mcp.tool
+def select_trip_dates(
+    calendar_file: str,
+    trip_length: int | None = None,
+) -> str:
+    """Selects the best dates for a trip.
+    Args:
+        calendar_file: The filename for a calendar file to parse.
+        trip_length: The length of the trip, in days. If not provided, the default is 7 days.
+    Returns:
+        The start and end date of the trip, formatted as {"start_date": "2026-07-01", "end_date": "2026-07-03"}
+    """
+    if trip_length is None or trip_length < 1:
+        trip_length = 7
+    return json.dumps(get_free_calendar_dates(calendar_file, trip_length, trip_length, 1)[0])
 
 @mcp.tool
 def get_free_calendar_dates(
@@ -148,7 +142,7 @@ def get_geocode_data(
     type: str | None = None,
 ) -> dict:
     params = {
-        "text": urllib.parse.quote(address),
+        "text": address,
         "apiKey": _geoapify_api_key(),
     }
     normalized_country_code = _normalize_country_code(country_code)
@@ -196,6 +190,8 @@ def get_latitude_longitude(
         JSON with latitude and longitude keys.
     """
     data = get_geocode_data(address, None)
+    if "features" not in data or len(data["features"]) == 0:
+        raise ValueError(f"Unable to find latitude and longitude for {address!r}")
     props = data["features"][0]["properties"]
     return json.dumps({"latitude": props["lat"], "longitude": props["lon"]})
 

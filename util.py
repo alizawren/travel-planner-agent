@@ -9,12 +9,12 @@ def get_llm(tools):
 
     if provider in {"gemini", "google"}:
         llm = ChatGoogleGenerativeAI(
-            model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+            model=os.getenv("GEMINI_MODEL", "gemini-3.5-flash"),
             temperature=temperature,
         )
     elif provider in {"claude", "anthropic"}:
         llm = ChatAnthropic(
-            model=os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001"),
+            model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
             temperature=temperature,
         )
     else:
