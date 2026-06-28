@@ -28,7 +28,7 @@ from util import format_messages, get_llm
 from prompts import build_system_prompt
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-MCP_SERVER = PROJECT_ROOT / "mcp_server" / "__main__.py"
+MCP_SERVER = PROJECT_ROOT / "mcp_server" / "server.py"
 USER_PREFS_PATH = Path(__file__).resolve().parent / "user_info" / "user_prefs.json"
 
 
