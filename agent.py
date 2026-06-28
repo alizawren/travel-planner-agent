@@ -27,7 +27,8 @@ from langgraph.store.memory import InMemoryStore
 from util import format_messages, get_llm
 from prompts import build_system_prompt
 
-MCP_SERVER = Path(__file__).resolve().parent / "mcp_server.py"
+PROJECT_ROOT = Path(__file__).resolve().parent
+MCP_SERVER = PROJECT_ROOT / "mcp_server" / "__main__.py"
 USER_PREFS_PATH = Path(__file__).resolve().parent / "user_info" / "user_prefs.json"
 
 
@@ -38,6 +39,7 @@ async def build_graph(store: InMemoryStore):
                 "command": sys.executable,
                 "args": [str(MCP_SERVER)],
                 "transport": "stdio",
+                "cwd": str(PROJECT_ROOT),
             }
         }
     )
@@ -91,7 +93,7 @@ async def main():
     print("Calling model...", flush=True)
     result = await g.ainvoke(
         {"messages": [
-            {"role": "user", "content": "Hi! Can you plan a trip to Paris?"},
+            {"role": "user", "content": "Hi! Can you plan a trip to New York?"},
         ]},
         config,
     )

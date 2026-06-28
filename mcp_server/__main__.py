@@ -1,15 +1,20 @@
-from fastmcp import FastMCP
+import json
+import os
+import sys
 from pathlib import Path
+
+import requests
 from dotenv import load_dotenv
+from fastmcp import FastMCP
 from calendar_util import find_soonest_free_dates
 
-import os
-import requests
-import json
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-load_dotenv(Path(__file__).resolve().parent / ".env")
+load_dotenv(ROOT / ".env")
 
-WORKSPACE = Path(__file__).resolve().parent
+WORKSPACE = ROOT
 
 mcp = FastMCP("Demo 🚀")
 

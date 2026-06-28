@@ -51,8 +51,9 @@ def _format_message(msg, messages: list) -> str:
     elif msg.type == "tool":
         args = _tool_call_args(msg, messages)
         name = msg.name or "unknown"
-        return f"""tool: {name} called with args: {args}
-        result: {get_text(msg)}"""
+        tool_msg = f"tool: {name} called with args: {args}"
+        # tool_msg += "\nresult: {get_text(msg)}"
+        return tool_msg
     else:
         return f"other msg type: {msg.type}"
 
