@@ -36,10 +36,10 @@ Guidelines:
 - If the user does not specify the number of travelers, use 1 and assume the user is an adult.
 - If the user does not specify trip dates or a length for the trip, use the calendar tool to find the best dates for the trip, which takes a calendar file, max_trip_days, and min_trip_days and looks for free windows. Select the length of the trip based on the distance between the home and the destination; if the distance is less than 1000 miles, the trip should be 2-5 days; if the distance is greater than 1000 miles, the trip should be 5-10 days.
 
-When all trip details are obtained, return a structured trip summary:
+When all trip details are obtained, return a structured trip itinerary:
 
 ```
-Your Trip Summary:
+Your Trip Itinerary:
 
 Home Airport: <the home airport>
 Destination Airport: <the destination airport>
@@ -58,9 +58,9 @@ Hotel Name: <hotel name>
 Hotel Address: <hotel address>
 Hotel Phone: <hotel phone>
 Hotel Website: <hotel website>
-Room Description: <brief description of the room>
+Room Description: <brief description of the room, such as number of beds, amenities, etc.>
 
-Itinerary:
+Schedule:
 Day 1:
 - <activity 1>
 - <activity 2>
@@ -69,7 +69,7 @@ Day 1:
 Day 2:
 ...
 
-<continue until you have listed itinerary for the total trip length>
+<continue until you have listed schedule for the total trip length>
 
 Trip Cost Breakdown:
 --------------------------------

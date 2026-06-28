@@ -66,7 +66,7 @@ def list_files(workspace: Path, path: str = ".") -> str:
 
 @mcp.tool
 def get_free_calendar_dates(
-    calendar_file: str,
+    calendar_file: str | None = None,
     max_trip_days: int = 15,
     min_trip_days: int = 2,
     num_date_ranges: int = 5,
@@ -80,7 +80,8 @@ def get_free_calendar_dates(
     Returns: 
         A list of free date ranges for the trip. Date ranges are formatted as {"start_date": "2026-07-01", "end_date": "2026-07-03"}
     """
-    calendar_path = _resolve(WORKSPACE, calendar_file)
+
+    calendar_path = _resolve(WORKSPACE, calendar_file) if calendar_file else None
     return json.dumps(
         find_soonest_free_dates(
             calendar_path, min_trip_days, max_trip_days, num_date_ranges

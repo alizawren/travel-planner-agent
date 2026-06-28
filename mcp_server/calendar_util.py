@@ -109,7 +109,7 @@ def _find_next_date_range(
 
 
 def find_soonest_free_dates(
-    calendar_path: Path,
+    calendar_path: Path | None = None,
     min_trip_days: int = 2,
     max_trip_days: int = 15,
     num_date_ranges: int = 5,
@@ -120,8 +120,16 @@ def find_soonest_free_dates(
         raise ValueError("max_trip_days must be greater than or equal to min_trip_days")
     if num_date_ranges < 1:
         raise ValueError("num_date_ranges must be at least 1")
-    if not calendar_path.is_file():
+    if calendar_path and not calendar_path.is_file():
         raise ValueError(f"Not a file: {calendar_path}")
+    if not calendar_path:
+        return [
+            {
+                "start_date": date.today().isoformat(),
+                "end_date": date.today() + timedelta(days=max_trip_days - 1).isoformat(),
+                "trip_days": max_trip_days,
+            }
+        ]
 
     calendar = Calendar.from_ical(calendar_path.read_text(encoding="utf-8"))
 
