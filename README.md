@@ -24,10 +24,16 @@ python agent.py
 
 ## Example
 
+Example input:
+
+```
+Hi! Can you plan a trip to New York?
+```
+
 An example of a returned itinerary:
 
 ```
-Your Trip Summary:
+Your Trip Itinerary:
 
 Home Airport: SJC (San Jose Mineta International Airport)
 Destination Airport: JFK (John F. Kennedy International Airport)
@@ -53,7 +59,7 @@ Room Description: Boutique hotel in the heart of Chelsea, Manhattan, known for i
   iconic porthole windows and nautical-inspired design. Stylish rooms with modern
   amenities in a prime location near the High Line and Meatpacking District.
 
-Itinerary:
+Schedule:
 
 Day 1 – June 29 (Arrival Day):
 - Arrive at JFK, check into the Maritime Hotel
