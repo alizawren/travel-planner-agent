@@ -157,10 +157,13 @@ async def main():
     user_id = config["configurable"]["thread_id"]
 
     store = InMemoryStore()
-    prefs = json.loads(USER_PREFS_PATH.read_text(encoding="utf-8"))
-    namespace = (user_id, "prefs")
-    for key, value in prefs.items():
-        store.put(namespace, key, {"v": value})
+    try:
+        prefs = json.loads(USER_PREFS_PATH.read_text(encoding="utf-8"))
+        namespace = (user_id, "prefs")
+        for key, value in prefs.items():
+            store.put(namespace, key, {"v": value})
+    except FileNotFoundError:
+        print("No user prefs file found, using empty prefs", flush=True)
 
     print("Building graph...", flush=True)
     g = await build_graph(store)
@@ -170,7 +173,7 @@ async def main():
         g,
         {
             "messages": [
-                HumanMessage(content="Hi! Can you plan a trip to LalaLand?"),
+                HumanMessage(content="Hi! Can you plan a trip to Paris?"),
             ],
         },
         config,
